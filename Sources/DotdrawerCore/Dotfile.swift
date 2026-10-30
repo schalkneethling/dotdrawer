@@ -1,4 +1,4 @@
-/// The sections the drawer and onboarding group files into, in display order.
+/// The sections the drawer and Settings window group files into, in display order.
 public enum DotfileGroup: String, CaseIterable, Sendable {
     case agents = "Agent configs"
     case shell = "Shell"

@@ -1,8 +1,8 @@
 import DotdrawerCore
 import SwiftUI
 
-struct OnboardingView: View {
-    @Bindable var model: OnboardingModel
+struct SettingsView: View {
+    @Bindable var model: SettingsModel
 
     var body: some View {
         switch model.step {
@@ -56,17 +56,86 @@ struct OnboardingView: View {
                 }
             }
 
-            editorPicker
-
             HStack {
                 Button("Scan Again") { model.rescan() }
+                Spacer()
+            }
+
+            Divider()
+
+            generalSettings
+
+            HStack {
                 Spacer()
                 Button("Done") { model.close() }
                     .keyboardShortcut(.defaultAction)
             }
         }
         .padding(24)
-        .frame(width: 440, height: 520)
+        .frame(width: 480, height: 640)
+    }
+
+    /// Labels on the left, controls on the right, like macOS settings.
+    private var generalSettings: some View {
+        Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 12, verticalSpacing: 14) {
+            GridRow {
+                Text("Open files with")
+                    .gridColumnAlignment(.trailing)
+                editorPicker
+            }
+            GridRow {
+                Text("Open drawer with")
+                shortcutSetting
+            }
+            GridRow {
+                Text("Startup")
+                loginSetting
+            }
+        }
+    }
+
+    private var shortcutSetting: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                ShortcutRecorder(
+                    shortcut: model.shortcut,
+                    onStart: model.beginRecordingShortcut,
+                    onRecord: model.recordShortcut,
+                    onCancel: model.cancelRecordingShortcut
+                )
+                if model.shortcut != nil {
+                    Button("Clear") { model.clearShortcut() }
+                }
+            }
+            if let problem = model.shortcutProblem {
+                Text(problem)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    private var loginSetting: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Toggle("Launch dotdrawer at login", isOn: Binding(
+                get: { model.launchesAtLogin },
+                set: { model.setLaunchAtLogin($0) }
+            ))
+            if model.loginState == .needsApproval {
+                Text("Turned off in System Settings. Approve dotdrawer under Login Items to start it at login.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button("Open Login Items Settings") { model.openLoginItemsSettings() }
+            }
+            if let error = model.loginError {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
     }
 
     private var editorPicker: some View {
@@ -83,6 +152,8 @@ struct OnboardingView: View {
                     .tag(Optional(editor.bundleIdentifier))
                 }
             }
+            // The grid row already shows the label.
+            .labelsHidden()
             Button("Other…") { model.chooseOtherEditor() }
         }
     }

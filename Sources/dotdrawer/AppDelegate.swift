@@ -7,7 +7,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let homeAccess = HomeAccess()
     private let store = SelectionStore()
     private let editorPreference = EditorPreference()
-    private lazy var onboarding = OnboardingWindowController(homeAccess: homeAccess, store: store, editorPreference: editorPreference)
+    private lazy var drawerShortcut = DrawerShortcut { [weak self] in self?.openDrawer() }
+    private lazy var settings = SettingsWindowController(
+        homeAccess: homeAccess,
+        store: store,
+        editorPreference: editorPreference,
+        drawerShortcut: drawerShortcut
+    )
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let menu = NSMenu()
@@ -23,15 +29,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         item.autosaveName = "dotdrawer"
         statusItem = item
 
+        drawerShortcut.activate()
+
         if !homeAccess.restore() {
-            onboarding.show()
+            settings.show()
         }
     }
 
-    /// Opening the app again while it runs shows the setup or Choose Files
+    /// Opens the drawer as if the user clicked the icon. This works even
+    /// when the icon is hidden behind the notch or another app's overlay,
+    /// because the menu drops down below the menu bar.
+    private func openDrawer() {
+        statusItem?.button?.performClick(nil)
+    }
+
+    /// Opening the app again while it runs shows the setup or Settings
     /// window, so the app stays reachable even when its icon is hidden.
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {
-        onboarding.show()
+        settings.show()
         return false
     }
 
@@ -40,16 +55,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         if let home = homeAccess.grantedHome {
             addFileItems(to: menu, home: home)
-            menu.addItem(NSMenuItem(title: "Choose Files…", action: #selector(showOnboarding), keyEquivalent: ","))
+            menu.addItem(NSMenuItem(title: "Settings…", action: #selector(showSettings), keyEquivalent: ","))
             menu.addItem(makeEditorMenuItem())
         } else {
-            menu.addItem(NSMenuItem(title: "Set Up dotdrawer…", action: #selector(showOnboarding), keyEquivalent: ""))
+            menu.addItem(NSMenuItem(title: "Set Up dotdrawer…", action: #selector(showSettings), keyEquivalent: ""))
         }
 
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Quit dotdrawer", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
 
-        for item in menu.items where item.action == #selector(showOnboarding) {
+        for item in menu.items where item.action == #selector(showSettings) {
             item.target = self
         }
     }
@@ -134,10 +149,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func saveEditor(_ bundleIdentifier: String?) {
         editorPreference.save(bundleIdentifier)
-        onboarding.editorDidChange(to: bundleIdentifier)
+        settings.editorDidChange(to: bundleIdentifier)
     }
 
-    @objc private func showOnboarding() {
-        onboarding.show()
+    @objc private func showSettings() {
+        settings.show()
     }
 }

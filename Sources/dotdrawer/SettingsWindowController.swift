@@ -2,29 +2,36 @@ import AppKit
 import DotdrawerCore
 import SwiftUI
 
-/// Shows the onboarding window, reusing it if it is already open.
+/// Shows the setup and Settings window, reusing it if it is already open.
 @MainActor
-final class OnboardingWindowController {
+final class SettingsWindowController {
     private let homeAccess: HomeAccess
     private let store: SelectionStore
     private let editorPreference: EditorPreference
+    private let drawerShortcut: DrawerShortcut
     private var window: NSWindow?
-    private var model: OnboardingModel?
+    private var model: SettingsModel?
 
-    init(homeAccess: HomeAccess, store: SelectionStore, editorPreference: EditorPreference) {
+    init(homeAccess: HomeAccess, store: SelectionStore, editorPreference: EditorPreference, drawerShortcut: DrawerShortcut) {
         self.homeAccess = homeAccess
         self.store = store
         self.editorPreference = editorPreference
+        self.drawerShortcut = drawerShortcut
     }
 
     func show() {
         // Build a fresh window unless one is on screen, so reopening after
         // the user closed it with the red button scans again.
         if window?.isVisible != true {
-            let model = OnboardingModel(homeAccess: homeAccess, store: store, editorPreference: editorPreference) { [weak self] in
+            let model = SettingsModel(
+                homeAccess: homeAccess,
+                store: store,
+                editorPreference: editorPreference,
+                drawerShortcut: drawerShortcut
+            ) { [weak self] in
                 self?.close()
             }
-            let window = NSWindow(contentViewController: NSHostingController(rootView: OnboardingView(model: model)))
+            let window = NSWindow(contentViewController: NSHostingController(rootView: SettingsView(model: model)))
             window.title = "dotdrawer"
             window.styleMask = [.titled, .closable]
             // The controller owns the window; without this, closing it with

@@ -1,11 +1,12 @@
 import DotdrawerCore
 import Observation
 
-/// State for the onboarding window: first the access step, then the
-/// checklist of found files and the choice of editor.
+/// State for the setup and Settings window: first the access step, then the
+/// checklist of found files, the editor, the drawer shortcut, and launch at
+/// login.
 @MainActor
 @Observable
-final class OnboardingModel {
+final class SettingsModel {
     enum Step {
         case access
         case choose
@@ -30,19 +31,38 @@ final class OnboardingModel {
         didSet { editorPreference.save(editorBundleIdentifier) }
     }
 
+    /// The shortcut that opens the drawer, copied from `DrawerShortcut`
+    /// after each change so the view updates.
+    private(set) var shortcut: Shortcut?
+    private(set) var shortcutProblem: String?
+
+    private(set) var loginState: LoginItem.State
+    private(set) var loginError: String?
+
     private let homeAccess: HomeAccess
     private let store: SelectionStore
     private let editorPreference: EditorPreference
+    private let drawerShortcut: DrawerShortcut
     private let onClose: () -> Void
 
-    init(homeAccess: HomeAccess, store: SelectionStore, editorPreference: EditorPreference, onClose: @escaping () -> Void) {
+    init(
+        homeAccess: HomeAccess,
+        store: SelectionStore,
+        editorPreference: EditorPreference,
+        drawerShortcut: DrawerShortcut,
+        onClose: @escaping () -> Void
+    ) {
         self.homeAccess = homeAccess
         self.store = store
         self.editorPreference = editorPreference
+        self.drawerShortcut = drawerShortcut
         self.onClose = onClose
         let choices = InstalledEditors.choices(saved: editorPreference.load())
         editors = choices.editors
         editorBundleIdentifier = choices.current
+        shortcut = drawerShortcut.current
+        shortcutProblem = drawerShortcut.problem
+        loginState = LoginItem.state
         step = homeAccess.grantedHome == nil ? .access : .choose
         if step == .choose {
             rescan()
@@ -101,6 +121,50 @@ final class OnboardingModel {
         if !editors.contains(where: { $0.bundleIdentifier == editor.bundleIdentifier }) {
             editors.append(editor)
         }
+    }
+
+    func beginRecordingShortcut() {
+        drawerShortcut.suspend()
+    }
+
+    func recordShortcut(_ recorded: Shortcut) {
+        drawerShortcut.change(to: recorded)
+        syncShortcut()
+    }
+
+    func cancelRecordingShortcut() {
+        drawerShortcut.resume()
+        syncShortcut()
+    }
+
+    func clearShortcut() {
+        drawerShortcut.change(to: nil)
+        syncShortcut()
+    }
+
+    private func syncShortcut() {
+        shortcut = drawerShortcut.current
+        shortcutProblem = drawerShortcut.problem
+    }
+
+    /// On while registered, including while waiting for approval in System
+    /// Settings, so the toggle matches what the user asked for.
+    var launchesAtLogin: Bool {
+        loginState != .disabled
+    }
+
+    func setLaunchAtLogin(_ enabled: Bool) {
+        do {
+            try LoginItem.setEnabled(enabled)
+            loginError = nil
+        } catch {
+            loginError = "macOS couldn't change the login item: \(error.localizedDescription)"
+        }
+        loginState = LoginItem.state
+    }
+
+    func openLoginItemsSettings() {
+        LoginItem.openSystemSettings()
     }
 
     func close() {
