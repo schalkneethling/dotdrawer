@@ -13,7 +13,20 @@ Click the menu bar icon to open a drawer listing the files you chose. Select one
 
 ## Status
 
-Early development. The app is not sandboxed and is not yet packaged as a `.app` bundle, so it runs from the command line.
+Early development. The app is not sandboxed, and it is signed ad hoc, so it runs on the machine that built it without warnings, while other Macs will warn before opening it.
+
+## Build the app
+
+```bash
+./scripts/build-app.sh
+open build/dotdrawer.app
+```
+
+The script builds a release binary and wraps it in `build/dotdrawer.app`, which carries the bundle identifier `com.schalkneethling.dotdrawer`.
+
+### Can't see the menu bar icon?
+
+On a Mac with a notch, a full menu bar can push new icons behind the notch, and some apps draw overlays on top of the menu bar. Open dotdrawer again (from Finder or Spotlight) to bring up its window. To move the icon, hold ⌘ and drag it to a visible spot. dotdrawer remembers that position.
 
 ## Development
 

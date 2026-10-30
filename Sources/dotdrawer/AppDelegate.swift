@@ -17,11 +17,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         item.button?.image = NSImage(systemSymbolName: "doc.text", accessibilityDescription: "dotdrawer")
         item.menu = menu
+        // Remembers where the user ⌘-drags the icon. On a crowded menu bar,
+        // macOS can place a new icon behind the notch.
+        item.autosaveName = "dotdrawer"
         statusItem = item
 
         if !homeAccess.restore() {
             onboarding.show()
         }
+    }
+
+    /// Opening the app again while it runs shows the setup or Choose Files
+    /// window, so the app stays reachable even when its icon is hidden.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {
+        onboarding.show()
+        return false
     }
 
     func menuNeedsUpdate(_ menu: NSMenu) {

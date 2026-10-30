@@ -31,10 +31,13 @@ final class OnboardingWindowController {
             self.window = window
         }
 
-        // Accessory apps are never frontmost on their own, so bring the app
-        // forward or the window opens behind whatever the user is using.
+        // Accessory apps are never frontmost on their own, so ask to come
+        // forward. macOS can refuse that request when the user is busy in
+        // another app (on first launch, for example), so also put the window
+        // on top without taking focus, or it would open hidden behind them.
         NSApp.activate()
         window?.makeKeyAndOrderFront(nil)
+        window?.orderFrontRegardless()
     }
 
     private func close() {
