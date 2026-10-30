@@ -5,18 +5,28 @@ import PackageDescription
 
 let package = Package(
     name: "dotdrawer",
+    platforms: [
+        .macOS(.v14),
+    ],
     targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
+        // UI-free logic: which dotfiles exist and which ones the user chose.
+        .target(
+            name: "DotdrawerCore",
+            swiftSettings: [
+                .enableUpcomingFeature("ApproachableConcurrency"),
+            ],
+        ),
+        // The menu bar app itself.
         .executableTarget(
             name: "dotdrawer",
+            dependencies: ["DotdrawerCore"],
             swiftSettings: [
                 .enableUpcomingFeature("ApproachableConcurrency"),
             ],
         ),
         .testTarget(
-            name: "dotdrawerTests",
-            dependencies: ["dotdrawer"],
+            name: "DotdrawerCoreTests",
+            dependencies: ["DotdrawerCore"],
             swiftSettings: [
                 .enableUpcomingFeature("ApproachableConcurrency"),
             ],
