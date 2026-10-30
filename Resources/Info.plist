@@ -6,6 +6,13 @@
 	<string>en</string>
 	<key>CFBundleExecutable</key>
 	<string>dotdrawer</string>
+	<!-- The icon compiled from Resources/AppIcon.icon by build-app.sh:
+	     CFBundleIconName names it in Assets.car (with the Liquid Glass
+	     variants), and CFBundleIconFile names the AppIcon.icns fallback. -->
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.schalkneethling.dotdrawer</string>
 	<key>CFBundleInfoDictionaryVersion</key>
