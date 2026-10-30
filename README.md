@@ -9,7 +9,7 @@ Click the menu bar icon to open a drawer listing the files you chose. Select one
 - **Onboarding:** on first launch, you choose your home folder in a macOS open panel. dotdrawer stores that permission as a security-scoped bookmark, so it doesn't ask again on later launches.
 - **Scan:** dotdrawer looks for well-known files, such as agent configs, shell startup files, and tool configs, plus any other dotfile at the top level of your home folder. History files and caches are skipped.
 - **Choose:** you tick the files you want in the drawer. Agent configs start ticked. Reopen the list any time with **Choose Files…** in the menu.
-- **Open:** selecting a file opens it in the app macOS uses for that file type. For files without an extension, such as `.zshrc`, it falls back to your default plain-text editor.
+- **Open:** selecting a file opens it in the editor you chose under **Open files with** in the Choose Files window. The list offers installed apps that edit text, and **Other…** lets you pick any app. If you keep the default, each file opens in the app macOS uses for its type, and files without an extension, such as `.zshrc`, open in your default plain-text editor.
 
 ## Status
 

@@ -56,6 +56,8 @@ struct OnboardingView: View {
                 }
             }
 
+            editorPicker
+
             HStack {
                 Button("Scan Again") { model.rescan() }
                 Spacer()
@@ -64,7 +66,25 @@ struct OnboardingView: View {
             }
         }
         .padding(24)
-        .frame(width: 440, height: 480)
+        .frame(width: 440, height: 520)
+    }
+
+    private var editorPicker: some View {
+        HStack {
+            Picker("Open files with", selection: $model.editorBundleIdentifier) {
+                Text("Default app for each file").tag(String?.none)
+                Divider()
+                ForEach(model.editors, id: \.bundleIdentifier) { editor in
+                    Label {
+                        Text(editor.name)
+                    } icon: {
+                        Image(nsImage: InstalledEditors.icon(for: editor))
+                    }
+                    .tag(Optional(editor.bundleIdentifier))
+                }
+            }
+            Button("Other…") { model.chooseOtherEditor() }
+        }
     }
 
     private func binding(for file: Dotfile) -> Binding<Bool> {

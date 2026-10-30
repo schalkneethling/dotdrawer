@@ -17,15 +17,19 @@ final class HomeAccess {
 
     /// The real home folder. FileManager's home folder points inside the
     /// app's container when sandboxed, so read it from the user database.
-    let expectedHome: URL
+    static let realHome: URL = {
+        let path = getpwuid(getuid()).map { String(cString: $0.pointee.pw_dir) } ?? NSHomeDirectory()
+        return URL(fileURLWithPath: path, isDirectory: true)
+    }()
+
+    /// The folder the user must choose to grant access.
+    let expectedHome = HomeAccess.realHome
 
     /// Set once the user has granted access, on this launch or an earlier one.
     private(set) var grantedHome: URL?
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        let path = getpwuid(getuid()).map { String(cString: $0.pointee.pw_dir) } ?? NSHomeDirectory()
-        expectedHome = URL(fileURLWithPath: path, isDirectory: true)
     }
 
     /// Restores access granted on an earlier launch. Returns false when the

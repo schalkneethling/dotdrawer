@@ -7,18 +7,20 @@ import SwiftUI
 final class OnboardingWindowController {
     private let homeAccess: HomeAccess
     private let store: SelectionStore
+    private let editorPreference: EditorPreference
     private var window: NSWindow?
 
-    init(homeAccess: HomeAccess, store: SelectionStore) {
+    init(homeAccess: HomeAccess, store: SelectionStore, editorPreference: EditorPreference) {
         self.homeAccess = homeAccess
         self.store = store
+        self.editorPreference = editorPreference
     }
 
     func show() {
         // Build a fresh window unless one is on screen, so reopening after
         // the user closed it with the red button scans again.
         if window?.isVisible != true {
-            let model = OnboardingModel(homeAccess: homeAccess, store: store) { [weak self] in
+            let model = OnboardingModel(homeAccess: homeAccess, store: store, editorPreference: editorPreference) { [weak self] in
                 self?.close()
             }
             let window = NSWindow(contentViewController: NSHostingController(rootView: OnboardingView(model: model)))

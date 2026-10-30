@@ -6,7 +6,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem?
     private let homeAccess = HomeAccess()
     private let store = SelectionStore()
-    private lazy var onboarding = OnboardingWindowController(homeAccess: homeAccess, store: store)
+    private let editorPreference = EditorPreference()
+    private lazy var onboarding = OnboardingWindowController(homeAccess: homeAccess, store: store, editorPreference: editorPreference)
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let menu = NSMenu()
@@ -88,7 +89,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func openFile(_ sender: NSMenuItem) {
         guard let url = sender.representedObject as? URL else { return }
-        FileOpener.open(url)
+        FileOpener.open(url, editorBundleIdentifier: editorPreference.load())
     }
 
     @objc private func showOnboarding() {
