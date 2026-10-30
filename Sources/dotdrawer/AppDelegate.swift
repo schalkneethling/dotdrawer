@@ -22,7 +22,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.delegate = self
 
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        item.button?.image = NSImage(systemSymbolName: "doc.text", accessibilityDescription: "dotdrawer")
+        item.button?.image = Self.menuBarIcon()
         item.menu = menu
         // Remembers where the user ⌘-drags the icon. On a crowded menu bar,
         // macOS can place a new icon behind the notch.
@@ -34,6 +34,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if !homeAccess.restore() {
             settings.show()
         }
+    }
+
+    /// The app's glyph from the bundle, as a template image so macOS tints
+    /// it for light and dark menu bars and the highlighted state. Running
+    /// unbundled with `swift run` has no bundle resources, so fall back to
+    /// a system symbol there.
+    private static func menuBarIcon() -> NSImage? {
+        guard let url = Bundle.main.url(forResource: "MenuBarIcon", withExtension: "svg"),
+              let image = NSImage(contentsOf: url) else {
+            return NSImage(systemSymbolName: "doc.text", accessibilityDescription: "dotdrawer")
+        }
+        // The SVG has its own padding (the glyph fills about 86% of its
+        // canvas), so the standard 18pt matches other menu bar icons.
+        image.size = NSSize(width: 18, height: 18)
+        image.isTemplate = true
+        image.accessibilityDescription = "dotdrawer"
+        return image
     }
 
     /// Opens the drawer as if the user clicked the icon. This works even

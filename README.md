@@ -39,6 +39,6 @@ swift test
 swift run
 ```
 
-The app icon is `Resources/AppIcon.icon`. Open it in Icon Composer (Xcode › Open Developer Tool › Icon Composer) to edit it. `build-app.sh` compiles it with `actool` into the bundle's `Assets.car` and an `AppIcon.icns` fallback.
+The app icon is `Resources/AppIcon.icon`. Open it in Icon Composer (Xcode › Open Developer Tool › Icon Composer) to edit it. `build-app.sh` compiles it with `actool` into the bundle's `Assets.car` and an `AppIcon.icns` fallback. The menu bar icon is `Resources/MenuBarIcon.svg`, a single-color SVG on a square canvas with a small margin built in, shown at 18pt. dotdrawer shows it as a template image, so only its shape matters: macOS colors it to match the menu bar.
 
 The logic that doesn't need a UI (the dotfile catalog and scanner, the editor list filter, the shortcut model, and the saved settings) lives in the `DotdrawerCore` library, which the tests cover. The menu bar app is the `dotdrawer` executable.

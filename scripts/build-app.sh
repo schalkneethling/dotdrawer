@@ -14,6 +14,7 @@ rm -rf "$app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 cp "$(swift build -c release --show-bin-path)/dotdrawer" "$app/Contents/MacOS/dotdrawer"
 cp Resources/Info.plist "$app/Contents/Info.plist"
+cp Resources/MenuBarIcon.svg "$app/Contents/Resources/MenuBarIcon.svg"
 
 # Compile the Icon Composer file into Assets.car and AppIcon.icns. The
 # deployment target matches LSMinimumSystemVersion in Info.plist. actool
