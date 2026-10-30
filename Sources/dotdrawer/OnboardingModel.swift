@@ -13,38 +13,36 @@ final class OnboardingModel {
 
     private(set) var step: Step
     private(set) var found: [Dotfile] = []
-    var selectedPaths: Set<String> = []
     private(set) var accessError: String?
+
+    // Choices save as soon as they change, like a macOS settings window, so
+    // closing the window any way (Done or the red button) keeps them.
+
+    /// The ticked files.
+    var selectedPaths: Set<String> = [] {
+        didSet { store.save(found.filter { selectedPaths.contains($0.relativePath) }) }
+    }
 
     /// Apps offered in the Open With picker.
     private(set) var editors: [EditorApp]
     /// The chosen editor, or nil for each file's default app.
-    var editorBundleIdentifier: String?
+    var editorBundleIdentifier: String? {
+        didSet { editorPreference.save(editorBundleIdentifier) }
+    }
 
     private let homeAccess: HomeAccess
     private let store: SelectionStore
     private let editorPreference: EditorPreference
-    private let onFinish: () -> Void
+    private let onClose: () -> Void
 
-    init(homeAccess: HomeAccess, store: SelectionStore, editorPreference: EditorPreference, onFinish: @escaping () -> Void) {
+    init(homeAccess: HomeAccess, store: SelectionStore, editorPreference: EditorPreference, onClose: @escaping () -> Void) {
         self.homeAccess = homeAccess
         self.store = store
         self.editorPreference = editorPreference
-        self.onFinish = onFinish
-        var editors = InstalledEditors.list()
-        var saved = editorPreference.load()
-        // An editor picked with Other… isn't in the generated list, so add
-        // it back. One that has been uninstalled falls back to default apps,
-        // which is also what opening a file does.
-        if let bundleIdentifier = saved, !editors.contains(where: { $0.bundleIdentifier == bundleIdentifier }) {
-            if let editor = InstalledEditors.editor(withBundleIdentifier: bundleIdentifier) {
-                editors.append(editor)
-            } else {
-                saved = nil
-            }
-        }
-        self.editors = editors
-        editorBundleIdentifier = saved
+        self.onClose = onClose
+        let choices = InstalledEditors.choices(saved: editorPreference.load())
+        editors = choices.editors
+        editorBundleIdentifier = choices.current
         step = homeAccess.grantedHome == nil ? .access : .choose
         if step == .choose {
             rescan()
@@ -73,30 +71,39 @@ final class OnboardingModel {
     }
 
     /// Scans again, keeping the user's saved choices. On the first run
-    /// nothing is saved yet, so agent configs start selected because they
-    /// are what dotdrawer is for.
+    /// nothing is saved yet, so agent configs start selected (and saved)
+    /// because they are what dotdrawer is for.
     func rescan() {
         guard let home = homeAccess.grantedHome else { return }
         found = DotfileScanner(home: home).scan()
 
-        let saved = store.load()
-        selectedPaths = saved.isEmpty
-            ? Set(found.filter { $0.group == .agents }.map(\.relativePath))
-            : Set(saved.map(\.relativePath))
+        selectedPaths = store.hasSavedSelection
+            ? Set(store.load().map(\.relativePath))
+            : Set(found.filter { $0.group == .agents }.map(\.relativePath))
     }
 
     /// Adds an app the list didn't include and selects it.
     func chooseOtherEditor() {
         guard let editor = InstalledEditors.pickOther() else { return }
-        if !editors.contains(where: { $0.bundleIdentifier == editor.bundleIdentifier }) {
-            editors.append(editor)
-        }
+        include(editor)
         editorBundleIdentifier = editor.bundleIdentifier
     }
 
-    func finish() {
-        store.save(found.filter { selectedPaths.contains($0.relativePath) })
-        editorPreference.save(editorBundleIdentifier)
-        onFinish()
+    /// Selects an editor chosen elsewhere, such as the menu bar submenu.
+    func showEditor(_ bundleIdentifier: String?) {
+        if let bundleIdentifier, let editor = InstalledEditors.editor(withBundleIdentifier: bundleIdentifier) {
+            include(editor)
+        }
+        editorBundleIdentifier = bundleIdentifier
+    }
+
+    private func include(_ editor: EditorApp) {
+        if !editors.contains(where: { $0.bundleIdentifier == editor.bundleIdentifier }) {
+            editors.append(editor)
+        }
+    }
+
+    func close() {
+        onClose()
     }
 }

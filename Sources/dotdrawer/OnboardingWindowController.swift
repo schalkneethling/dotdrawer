@@ -9,6 +9,7 @@ final class OnboardingWindowController {
     private let store: SelectionStore
     private let editorPreference: EditorPreference
     private var window: NSWindow?
+    private var model: OnboardingModel?
 
     init(homeAccess: HomeAccess, store: SelectionStore, editorPreference: EditorPreference) {
         self.homeAccess = homeAccess
@@ -31,6 +32,7 @@ final class OnboardingWindowController {
             window.isReleasedWhenClosed = false
             window.center()
             self.window = window
+            self.model = model
         }
 
         // Accessory apps are never frontmost on their own, so ask to come
@@ -42,8 +44,15 @@ final class OnboardingWindowController {
         window?.orderFrontRegardless()
     }
 
+    /// Keeps an open window's picker in step with a choice made in the menu.
+    func editorDidChange(to bundleIdentifier: String?) {
+        guard window?.isVisible == true else { return }
+        model?.showEditor(bundleIdentifier)
+    }
+
     private func close() {
         window?.close()
         window = nil
+        model = nil
     }
 }

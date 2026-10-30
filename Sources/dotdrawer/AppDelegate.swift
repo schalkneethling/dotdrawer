@@ -41,6 +41,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if let home = homeAccess.grantedHome {
             addFileItems(to: menu, home: home)
             menu.addItem(NSMenuItem(title: "Choose Files…", action: #selector(showOnboarding), keyEquivalent: ","))
+            menu.addItem(makeEditorMenuItem())
         } else {
             menu.addItem(NSMenuItem(title: "Set Up dotdrawer…", action: #selector(showOnboarding), keyEquivalent: ""))
         }
@@ -87,9 +88,53 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
+    /// A submenu listing the editors, with a checkmark on the current one.
+    private func makeEditorMenuItem() -> NSMenuItem {
+        let choices = InstalledEditors.choices(saved: editorPreference.load())
+        let submenu = NSMenu()
+
+        let defaultApps = NSMenuItem(title: "Default App for Each File", action: #selector(setEditor(_:)), keyEquivalent: "")
+        defaultApps.state = choices.current == nil ? .on : .off
+        submenu.addItem(defaultApps)
+        submenu.addItem(.separator())
+
+        for editor in choices.editors {
+            let item = NSMenuItem(title: editor.name, action: #selector(setEditor(_:)), keyEquivalent: "")
+            item.representedObject = editor.bundleIdentifier
+            item.image = InstalledEditors.icon(for: editor)
+            item.state = editor.bundleIdentifier == choices.current ? .on : .off
+            submenu.addItem(item)
+        }
+
+        submenu.addItem(.separator())
+        submenu.addItem(NSMenuItem(title: "Other…", action: #selector(setOtherEditor), keyEquivalent: ""))
+        for item in submenu.items {
+            item.target = self
+        }
+
+        let parent = NSMenuItem(title: "Set Default Editor", action: nil, keyEquivalent: "")
+        parent.submenu = submenu
+        return parent
+    }
+
     @objc private func openFile(_ sender: NSMenuItem) {
         guard let url = sender.representedObject as? URL else { return }
         FileOpener.open(url, editorBundleIdentifier: editorPreference.load())
+    }
+
+    /// Saves the editor a submenu item stands for; nil means default apps.
+    @objc private func setEditor(_ sender: NSMenuItem) {
+        saveEditor(sender.representedObject as? String)
+    }
+
+    @objc private func setOtherEditor() {
+        guard let editor = InstalledEditors.pickOther() else { return }
+        saveEditor(editor.bundleIdentifier)
+    }
+
+    private func saveEditor(_ bundleIdentifier: String?) {
+        editorPreference.save(bundleIdentifier)
+        onboarding.editorDidChange(to: bundleIdentifier)
     }
 
     @objc private func showOnboarding() {

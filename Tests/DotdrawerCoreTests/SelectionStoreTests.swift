@@ -18,6 +18,16 @@ import Testing
     #expect(store.load() == selection)
 }
 
+@Test func tellsAnEmptySavedSelectionFromNoneSaved() {
+    let store = SelectionStore(defaults: isolatedDefaults())
+    #expect(!store.hasSavedSelection)
+
+    store.save([])
+
+    #expect(store.hasSavedSelection)
+    #expect(store.load().isEmpty)
+}
+
 @Test func dropsEntriesWithUnknownGroups() {
     let defaults = isolatedDefaults()
     defaults.set([["path": ".zshrc", "group": "Removed group"]], forKey: "selectedDotfiles")

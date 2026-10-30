@@ -9,6 +9,12 @@ public struct SelectionStore {
         self.defaults = defaults
     }
 
+    /// Whether a selection was ever saved. An empty selection the user
+    /// saved on purpose is different from never having chosen at all.
+    public var hasSavedSelection: Bool {
+        defaults.object(forKey: Self.key) != nil
+    }
+
     /// The chosen files, in the order they were saved.
     public func load() -> [Dotfile] {
         guard let entries = defaults.array(forKey: Self.key) as? [[String: String]] else { return [] }

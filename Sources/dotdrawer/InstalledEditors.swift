@@ -18,6 +18,21 @@ enum InstalledEditors {
         return EditorCatalog.editors(from: candidates, browserIdentifiers: Set(browsers), homePath: HomeAccess.realHome.path)
     }
 
+    /// The editors to offer and which one is current, given the saved
+    /// choice. An editor picked with Other… isn't in the generated list, so
+    /// it is added back. One that has been uninstalled counts as no choice,
+    /// which matches what opening a file does.
+    static func choices(saved: String?) -> (editors: [EditorApp], current: String?) {
+        var editors = list()
+        guard let saved else { return (editors, nil) }
+
+        if !editors.contains(where: { $0.bundleIdentifier == saved }) {
+            guard let editor = editor(withBundleIdentifier: saved) else { return (editors, nil) }
+            editors.append(editor)
+        }
+        return (editors, saved)
+    }
+
     /// Lets the user pick any app, for editors the list doesn't include.
     static func pickOther() -> EditorApp? {
         let panel = NSOpenPanel()

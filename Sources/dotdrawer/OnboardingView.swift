@@ -61,7 +61,7 @@ struct OnboardingView: View {
             HStack {
                 Button("Scan Again") { model.rescan() }
                 Spacer()
-                Button("Done") { model.finish() }
+                Button("Done") { model.close() }
                     .keyboardShortcut(.defaultAction)
             }
         }
