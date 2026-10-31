@@ -1,8 +1,9 @@
 # Publishes a release when a version tag is pushed, for example v0.2.0:
 # builds the app, signs it with the Developer ID, notarizes it, generates
 # Sparkle's appcast, and attaches both files to a GitHub release. When the
-# HOMEBREW_TAP_TOKEN secret exists, it also points the Homebrew cask at the
-# new version.
+# HOMEBREW_TAP_TOKEN secret exists, it also opens a pull request in the tap
+# that points the Homebrew cask at the new version and merges itself once
+# the tap's required checks pass.
 #
 # README › Releasing lists the secrets this needs and how to create them.
 name: Release
@@ -93,7 +94,8 @@ jobs:
             --generate-notes \
             --verify-tag
 
-      # Optional: needs a token that can push to the tap repository.
+      # Optional: needs a token that can push a branch to the tap repository
+      # and open a pull request there.
       - name: Update the Homebrew cask
         env:
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}

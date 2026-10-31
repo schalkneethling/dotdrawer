@@ -1,16 +1,20 @@
 #!/usr/bin/env bash
 # Points the Homebrew cask at a release: sets the version, the zip's
 # checksum, and the minimum macOS in Casks/dotdrawer.rb in the tap
-# repository, then commits and pushes. Run it after the release is published, because Homebrew downloads
-# the zip from that release.
+# repository, and opens a pull request that merges itself once the tap's
+# required checks pass. The tap's main branch only accepts pull requests.
+# Run it after the release is published, because Homebrew downloads the zip
+# from that release.
 #
 #   ./scripts/update-cask.sh <version>
 #
 # It reads the zip from build/release/<version>/, where release.sh puts it.
-# Locally it clones the tap over SSH with your own GitHub access. The
-# release workflow sets HOMEBREW_TAP_TOKEN to clone over HTTPS with a token
-# instead. DOTDRAWER_TAP_URL overrides both, for example to test against a
-# local copy of the tap.
+# Locally it uses your own GitHub access: SSH for Git, and your gh login for
+# the pull request. The release workflow sets HOMEBREW_TAP_TOKEN, which
+# needs read and write access to the tap's contents and pull requests, and
+# both use that instead. DOTDRAWER_TAP_URL points at another copy of the
+# tap for testing; the script then pushes the branch there and stops before
+# opening a pull request.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -71,6 +75,37 @@ if git -C "$tap" diff --quiet; then
     exit 0
 fi
 
+tap_repo="schalkneethling/homebrew-dotdrawer"
+branch="update-dotdrawer-$version"
+
+# An earlier run for this release may already have opened the pull request.
+if git -C "$tap" ls-remote --exit-code --heads origin "$branch" > /dev/null; then
+    echo "Branch $branch already exists in $tap_repo, so its pull request is already open or merged."
+    exit 0
+fi
+
+git -C "$tap" switch --quiet -c "$branch"
 git -C "$tap" commit --quiet -am "Update dotdrawer to $version"
-git -C "$tap" push --quiet
-echo "Updated the cask to $version ($sha256)."
+git -C "$tap" push --quiet origin "$branch"
+
+if [[ -n "${DOTDRAWER_TAP_URL:-}" ]]; then
+    echo "Pushed $branch to $DOTDRAWER_TAP_URL. Not opening a pull request against a test copy."
+    exit 0
+fi
+
+# gh opens the pull request through GitHub's API. In the workflow it uses
+# the tap token; locally, your own gh login.
+if [[ -n "${HOMEBREW_TAP_TOKEN:-}" ]]; then
+    export GH_TOKEN="$HOMEBREW_TAP_TOKEN"
+fi
+pr_url=$(gh pr create --repo "$tap_repo" --base main --head "$branch" \
+    --title "Update dotdrawer to $version" \
+    --body "Points the cask at dotdrawer $version (sha256 \`$sha256\`, macOS :$macos_name or later). Opened by scripts/update-cask.sh in schalkneethling/dotdrawer.")
+
+# Auto-merge needs it turned on in the tap's settings, which the tap's
+# repository controls do. Without it, the pull request waits for a person.
+if gh pr merge --repo "$tap_repo" --auto --squash "$branch"; then
+    echo "Opened $pr_url. It merges once the tap's required checks pass."
+else
+    echo "Opened $pr_url, but couldn't turn on auto-merge for it. Merge it by hand." >&2
+fi

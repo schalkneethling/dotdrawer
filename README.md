@@ -22,6 +22,24 @@ Early development. The app is not sandboxed. It runs on macOS 26 or later, on Ap
 
 ## Install
 
+### With Homebrew
+
+dotdrawer has its own [Homebrew tap](https://github.com/schalkneethling/homebrew-dotdrawer). Homebrew 7 and later load casks from taps outside Homebrew's own only once you trust them, which the second command does for this one cask:
+
+```bash
+brew tap schalkneethling/dotdrawer
+```
+
+```bash
+brew trust --cask schalkneethling/dotdrawer/dotdrawer
+```
+
+```bash
+brew install --cask dotdrawer
+```
+
+The cask installs the same signed and notarized release as the download below. dotdrawer then updates itself, so a plain `brew upgrade` skips it; `brew upgrade --cask --greedy dotdrawer` updates it through Homebrew instead.
+
 ### From a release
 
 Download `dotdrawer-<version>.zip` from [Releases](https://github.com/schalkneethling/dotdrawer/releases), unzip it, and move `dotdrawer.app` to `/Applications`. Releases are signed with a Developer ID and notarized by Apple, so macOS opens them without warnings.
@@ -110,7 +128,7 @@ Then create the release on GitHub with both files attached. Sparkle finds the fe
 gh release create v<version> build/release/<version>/dotdrawer-<version>.zip build/release/<version>/appcast.xml --generate-notes
 ```
 
-Finally, point the [Homebrew cask](https://github.com/schalkneethling/homebrew-dotdrawer) at the new release. The script sets the version, the zip's checksum, and the minimum macOS from the app's `LSMinimumSystemVersion` in the tap repository, then commits and pushes, using your own GitHub access over SSH:
+Finally, point the [Homebrew cask](https://github.com/schalkneethling/homebrew-dotdrawer) at the new release. The script sets the version, the zip's checksum, and the minimum macOS from the app's `LSMinimumSystemVersion` in the tap repository. The tap's `main` branch only accepts pull requests, so the script pushes a branch and opens a pull request set to merge itself once the tap's required checks pass. It uses your own GitHub access: SSH for Git, and your `gh` login for the pull request:
 
 ```bash
 ./scripts/update-cask.sh <version>
@@ -138,7 +156,7 @@ The workflow stops if the tag doesn't match `CFBundleShortVersionString`. It nee
 | `NOTARY_API_KEY_ID` | The key's ID, shown next to it in App Store Connect | `gh secret set NOTARY_API_KEY_ID` |
 | `NOTARY_API_ISSUER_ID` | The issuer ID, shown above the list of keys | `gh secret set NOTARY_API_ISSUER_ID` |
 | `SPARKLE_PRIVATE_KEY` | Sparkle's private signing key | Export it as shown in step 3 above, then run `gh secret set SPARKLE_PRIVATE_KEY < dotdrawer-sparkle-key` |
-| `HOMEBREW_TAP_TOKEN` (optional) | A token that can push to the tap repository | Create a fine-grained personal access token limited to `schalkneethling/homebrew-dotdrawer`, with read and write access to Contents. Then run `gh secret set HOMEBREW_TAP_TOKEN` and paste the token at the prompt. Without it, the workflow skips the cask update |
+| `HOMEBREW_TAP_TOKEN` (optional) | A token that can push a branch to the tap repository and open a pull request there | Create a fine-grained personal access token limited to `schalkneethling/homebrew-dotdrawer`, with read and write access to Contents and to Pull requests. Then run `gh secret set HOMEBREW_TAP_TOKEN` and paste the token at the prompt. Without it, the workflow skips the cask update |
 
 Delete the exported `.p12`, `.p8`, and Sparkle key files once the secrets are set, or keep them only in a password manager.
 
