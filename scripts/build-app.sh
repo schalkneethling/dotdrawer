@@ -1,10 +1,20 @@
 #!/usr/bin/env bash
-# Builds a release binary and wraps it in build/app.noindex/dotdrawer.app.
+# Builds a universal release binary and wraps it in
+# build/app.noindex/dotdrawer.app.
+#
+# Signs ad hoc by default, which is enough on the machine that built it. Set
+# DOTDRAWER_SIGN_IDENTITY to a "Developer ID Application: …" identity to sign
+# for distribution; release.sh does this before notarizing.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-swift build -c release
+identity="${DOTDRAWER_SIGN_IDENTITY:--}"
+
+# Both architectures, so the app also runs on Intel Macs. The binary's
+# minimum macOS still comes from the platforms setting in Package.swift.
+arch_flags=(--arch arm64 --arch x86_64)
+swift build -c release "${arch_flags[@]}"
 
 # Spotlight skips folders ending in .noindex. Outside one, macOS registers
 # the fresh bundle a few seconds after it appears, and launchers then list
@@ -12,7 +22,7 @@ swift build -c release
 app="build/app.noindex/dotdrawer.app"
 rm -rf "$app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
-cp "$(swift build -c release --show-bin-path)/dotdrawer" "$app/Contents/MacOS/dotdrawer"
+cp "$(swift build -c release "${arch_flags[@]}" --show-bin-path)/dotdrawer" "$app/Contents/MacOS/dotdrawer"
 cp Resources/Info.plist "$app/Contents/Info.plist"
 cp Resources/MenuBarIcon.svg "$app/Contents/Resources/MenuBarIcon.svg"
 
@@ -31,8 +41,13 @@ if [[ ! -f "$app/Contents/Resources/Assets.car" ]]; then
     exit 1
 fi
 
-# Ad-hoc signature, so macOS accepts the bundle on this machine. It is not
-# a Developer ID signature, so other Macs will warn before opening it.
-codesign --force --sign - "$app"
+if [[ "$identity" == "-" ]]; then
+    # Ad-hoc signature: macOS accepts it on this machine, but other Macs
+    # block it when it arrives as a download.
+    codesign --force --sign - "$app"
+else
+    # Notarization requires the hardened runtime and a secure timestamp.
+    codesign --force --options runtime --timestamp --sign "$identity" "$app"
+fi
 
 echo "Built $app"
