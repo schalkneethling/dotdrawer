@@ -4,6 +4,8 @@ A macOS menu bar app that gives quick access to your dotfiles and global agent c
 
 Click the menu bar icon, or press ⌃⌥⌘D from any app, to open a drawer listing the files you chose. Select one with the mouse or keyboard, and it opens in your default editor.
 
+[![dotdrawer opening ~/.claude/CLAUDE.md in Zed: ⌃⌥⌘D opens the drawer, then Return opens the selected file](docs/media/demo.gif)](docs/media/demo.mp4)
+
 ## How it works
 
 - **Onboarding:** on first launch, you choose your home folder in a macOS open panel. dotdrawer stores that permission as a security-scoped bookmark, so it doesn't ask again on later launches.
