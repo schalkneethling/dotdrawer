@@ -116,7 +116,7 @@ The workflow stops if the tag doesn't match `CFBundleShortVersionString`. It nee
 
 | Secret | What it holds | How to get it |
 |---|---|---|
-| `DEVELOPER_ID_CERTIFICATE_P12` | The Developer ID certificate and its private key, base64-encoded | In Keychain Access, select the "Developer ID Application" certificate, choose File › Export Items, and save it as a `.p12` file with a password. Then run `base64 -i developer-id.p12 \| gh secret set DEVELOPER_ID_CERTIFICATE_P12` |
+| `DEVELOPER_ID_CERTIFICATE_P12` | The Developer ID certificate and its private key, base64-encoded | In Keychain Access, select both the "Developer ID Application" certificate and its private key, which Xcode names "Mac Developer ID Application". In the My Certificates tab the key sits under the certificate; in All Items, Command-click both rows. Then choose File › Export Items and save a `.p12` file with a password. With only the certificate selected, `.p12` is grayed out. Alternatively, in Xcode's Manage Certificates, Control-click the certificate and choose Export Certificate. Then run `base64 -i developer-id.p12 \| gh secret set DEVELOPER_ID_CERTIFICATE_P12` |
 | `DEVELOPER_ID_CERTIFICATE_PASSWORD` | The password you gave the `.p12` file | `gh secret set DEVELOPER_ID_CERTIFICATE_PASSWORD`, then paste it at the prompt |
 | `NOTARY_API_KEY` | An App Store Connect API key, which `notarytool` uses instead of your Apple Account password | In App Store Connect, open Users and Access › Integrations › Team Keys, create a key with the Developer role, and download the `.p8` file. Then run `gh secret set NOTARY_API_KEY < AuthKey_<key ID>.p8` |
 | `NOTARY_API_KEY_ID` | The key's ID, shown next to it in App Store Connect | `gh secret set NOTARY_API_KEY_ID` |
