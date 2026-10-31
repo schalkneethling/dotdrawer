@@ -30,5 +30,12 @@
 	<!-- Menu bar only: no Dock icon and no app menu. -->
 	<key>LSUIElement</key>
 	<true/>
+	<!-- Sparkle reads the appcast attached to the latest GitHub release,
+	     which release.sh generates, and accepts only updates signed with the
+	     private key that matches this public key. -->
+	<key>SUFeedURL</key>
+	<string>https://github.com/schalkneethling/dotdrawer/releases/latest/download/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>Qcg4Q649kBMxeQ73o3O3DXvubdKIuW/oCc7XOhMI4CE=</string>
 </dict>
 </plist>

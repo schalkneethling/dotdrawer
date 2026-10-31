@@ -8,6 +8,11 @@ let package = Package(
     platforms: [
         .macOS(.v14),
     ],
+    dependencies: [
+        // In-app updates. Pinned to an exact release, because it ships inside
+        // the app and verifies every update it installs.
+        .package(url: "https://github.com/sparkle-project/Sparkle", exact: "2.10.0"),
+    ],
     targets: [
         // UI-free logic: which dotfiles exist and which ones the user chose.
         .target(
@@ -19,9 +24,18 @@ let package = Package(
         // The menu bar app itself.
         .executableTarget(
             name: "dotdrawer",
-            dependencies: ["DotdrawerCore"],
+            dependencies: [
+                "DotdrawerCore",
+                .product(name: "Sparkle", package: "Sparkle"),
+            ],
             swiftSettings: [
                 .enableUpcomingFeature("ApproachableConcurrency"),
+            ],
+            linkerSettings: [
+                // build-app.sh puts Sparkle.framework in Contents/Frameworks.
+                // The default @loader_path still covers `swift run`, where the
+                // framework sits next to the binary.
+                .unsafeFlags(["-Xlinker", "-rpath", "-Xlinker", "@executable_path/../Frameworks"]),
             ],
         ),
         .testTarget(

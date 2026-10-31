@@ -7,3 +7,6 @@ DerivedData/
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .netrc
 /build
+
+# Exported Sparkle signing key (see README › Releasing). Never commit it.
+/dotdrawer-sparkle-key
