@@ -11,8 +11,12 @@ cd "$(dirname "$0")/.."
 
 identity="${DOTDRAWER_SIGN_IDENTITY:--}"
 
-# Both architectures, so the app also runs on Intel Macs. The binary's
-# minimum macOS still comes from the platforms setting in Package.swift.
+# Both architectures, so the app also runs on Intel Macs, which get macOS
+# releases up to 26. The binary's minimum macOS still comes from the
+# platforms setting in Package.swift. SwiftPM warns that x86_64 is
+# deprecated for a macOS 27 deployment target, but the version it names is
+# the SDK's (27.2 on one Mac, 27.0 on the CI runner), while the binary it
+# builds still has this package's minimum, so the warning doesn't apply.
 arch_flags=(--arch arm64 --arch x86_64)
 swift build -c release "${arch_flags[@]}"
 
@@ -35,13 +39,14 @@ sparkle="$app/Contents/Frameworks/Sparkle.framework"
 ditto "$bin_path/Sparkle.framework" "$sparkle"
 rm -rf "$sparkle/XPCServices" "$sparkle/Versions/B/XPCServices"
 
-# Compile the Icon Composer file into Assets.car and AppIcon.icns. The
-# deployment target matches LSMinimumSystemVersion in Info.plist. actool
-# reports progress as XML on stdout, so keep that quiet and check the result.
+# Compile the Icon Composer file into Assets.car and AppIcon.icns, for the
+# same minimum macOS as the app. actool reports progress as XML on stdout,
+# so keep that quiet and check the result.
+min_macos=$(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' Resources/Info.plist)
 xcrun actool \
     --compile "$app/Contents/Resources" \
     --platform macosx \
-    --minimum-deployment-target 14.0 \
+    --minimum-deployment-target "$min_macos" \
     --app-icon AppIcon \
     --output-partial-info-plist "build/app.noindex/icon-info.plist" \
     Resources/AppIcon.icon > /dev/null

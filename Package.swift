@@ -6,7 +6,9 @@ import PackageDescription
 let package = Package(
     name: "dotdrawer",
     platforms: [
-        .macOS(.v14),
+        // Keep in step with LSMinimumSystemVersion in Resources/Info.plist,
+        // which build-app.sh and update-cask.sh read.
+        .macOS(.v26),
     ],
     dependencies: [
         // In-app updates. Pinned to an exact release, because it ships inside

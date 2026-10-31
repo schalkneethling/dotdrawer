@@ -18,7 +18,7 @@ Click the menu bar icon, or press ⌃⌥⌘D from any app, to open a drawer list
 
 ## Status
 
-Early development. The app is not sandboxed. It runs on macOS 14 or later, on Apple silicon and Intel Macs.
+Early development. The app is not sandboxed. It runs on macOS 26 or later, on Apple silicon and Intel Macs. Version 0.2.0 is the last release for macOS 14 and 15.
 
 ## Install
 
@@ -110,7 +110,7 @@ Then create the release on GitHub with both files attached. Sparkle finds the fe
 gh release create v<version> build/release/<version>/dotdrawer-<version>.zip build/release/<version>/appcast.xml --generate-notes
 ```
 
-Finally, point the [Homebrew cask](https://github.com/schalkneethling/homebrew-dotdrawer) at the new release. The script sets the version and the zip's checksum in the tap repository, then commits and pushes, using your own GitHub access over SSH:
+Finally, point the [Homebrew cask](https://github.com/schalkneethling/homebrew-dotdrawer) at the new release. The script sets the version, the zip's checksum, and the minimum macOS from the app's `LSMinimumSystemVersion` in the tap repository, then commits and pushes, using your own GitHub access over SSH:
 
 ```bash
 ./scripts/update-cask.sh <version>
