@@ -71,10 +71,26 @@ The script needs three things on the Mac that runs it, all set up once:
 3. **Sparkle's private signing key.** Sparkle installs an update only when the zip is signed with the private key that matches `SUPublicEDKey` in `Resources/Info.plist`. The key lives in the login keychain under the account name `dotdrawer`. After `swift build` has downloaded Sparkle, you can export it to move it to another Mac or to keep a backup:
 
    ```bash
-   .build/artifacts/sparkle/Sparkle/bin/generate_keys --account dotdrawer -x dotdrawer-sparkle-key
+   (umask 077; .build/artifacts/sparkle/Sparkle/bin/generate_keys --account dotdrawer -x dotdrawer-sparkle-key)
    ```
 
-   Keep that file somewhere safe and out of the repository. If the key is lost, installed copies can't verify updates any more, and their users have to download the next version by hand.
+   `umask 077` makes the file readable only by you, and `.gitignore` keeps it out of commits. Keep a copy somewhere safe, such as a password manager. If the key is lost, installed copies can't verify updates any more, and their users have to download the next version by hand.
+
+   To keep it in 1Password, add a field of type Password, labeled for example `Sparkle private key`, to an item in one of your vaults. Copy the key with the first command below, paste it into the field and save, then clear the clipboard with the second. If you use a clipboard history manager, delete the entry there too.
+
+   ```bash
+   pbcopy < dotdrawer-sparkle-key
+   ```
+
+   ```bash
+   pbcopy < /dev/null
+   ```
+
+   Later, the 1Password CLI writes it back to a file. Replace `<vault>` and `<item>` with the names you used:
+
+   ```bash
+   (umask 077; op read --out-file dotdrawer-sparkle-key "op://<vault>/<item>/Sparkle private key")
+   ```
 
    On another Mac, import the exported file into the login keychain, then print the imported key's public half:
 
@@ -122,7 +138,7 @@ The workflow stops if the tag doesn't match `CFBundleShortVersionString`. It nee
 | `NOTARY_API_KEY_ID` | The key's ID, shown next to it in App Store Connect | `gh secret set NOTARY_API_KEY_ID` |
 | `NOTARY_API_ISSUER_ID` | The issuer ID, shown above the list of keys | `gh secret set NOTARY_API_ISSUER_ID` |
 | `SPARKLE_PRIVATE_KEY` | Sparkle's private signing key | Export it as shown in step 3 above, then run `gh secret set SPARKLE_PRIVATE_KEY < dotdrawer-sparkle-key` |
-| `HOMEBREW_TAP_TOKEN` (optional) | A token that can push to the tap repository | Create a fine-grained personal access token limited to `schalkneethling/homebrew-dotdrawer`, with read and write access to Contents. Without it, the workflow skips the cask update |
+| `HOMEBREW_TAP_TOKEN` (optional) | A token that can push to the tap repository | Create a fine-grained personal access token limited to `schalkneethling/homebrew-dotdrawer`, with read and write access to Contents. Then run `gh secret set HOMEBREW_TAP_TOKEN` and paste the token at the prompt. Without it, the workflow skips the cask update |
 
 Delete the exported `.p12`, `.p8`, and Sparkle key files once the secrets are set, or keep them only in a password manager.
 
