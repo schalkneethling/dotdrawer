@@ -20,11 +20,20 @@ swift build -c release "${arch_flags[@]}"
 # the fresh bundle a few seconds after it appears, and launchers then list
 # it next to the installed copy in /Applications.
 app="build/app.noindex/dotdrawer.app"
+bin_path="$(swift build -c release "${arch_flags[@]}" --show-bin-path)"
 rm -rf "$app"
-mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
-cp "$(swift build -c release "${arch_flags[@]}" --show-bin-path)/dotdrawer" "$app/Contents/MacOS/dotdrawer"
+mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources" "$app/Contents/Frameworks"
+cp "$bin_path/dotdrawer" "$app/Contents/MacOS/dotdrawer"
 cp Resources/Info.plist "$app/Contents/Info.plist"
 cp Resources/MenuBarIcon.svg "$app/Contents/Resources/MenuBarIcon.svg"
+
+# Sparkle, for in-app updates. ditto keeps the framework's symlinks intact.
+# Its XPC services exist for sandboxed apps; dotdrawer isn't sandboxed, and
+# Sparkle documents removing them in that case, which leaves fewer helpers
+# to sign.
+sparkle="$app/Contents/Frameworks/Sparkle.framework"
+ditto "$bin_path/Sparkle.framework" "$sparkle"
+rm -rf "$sparkle/XPCServices" "$sparkle/Versions/B/XPCServices"
 
 # Compile the Icon Composer file into Assets.car and AppIcon.icns. The
 # deployment target matches LSMinimumSystemVersion in Info.plist. actool
@@ -41,13 +50,19 @@ if [[ ! -f "$app/Contents/Resources/Assets.car" ]]; then
     exit 1
 fi
 
-if [[ "$identity" == "-" ]]; then
-    # Ad-hoc signature: macOS accepts it on this machine, but other Macs
-    # block it when it arrives as a download.
-    codesign --force --sign - "$app"
-else
-    # Notarization requires the hardened runtime and a secure timestamp.
-    codesign --force --options runtime --timestamp --sign "$identity" "$app"
+# An ad-hoc signature is accepted on this machine, but other Macs block it
+# when it arrives as a download. A Developer ID signature for notarization
+# also needs the hardened runtime and a secure timestamp.
+sign_flags=(--force --sign "$identity")
+if [[ "$identity" != "-" ]]; then
+    sign_flags+=(--options runtime --timestamp)
 fi
+
+# Sign from the inside out, in the order Sparkle documents: its helpers,
+# then the framework, then the app, whose signature covers everything in it.
+codesign "${sign_flags[@]}" "$sparkle/Versions/B/Autoupdate"
+codesign "${sign_flags[@]}" "$sparkle/Versions/B/Updater.app"
+codesign "${sign_flags[@]}" "$sparkle"
+codesign "${sign_flags[@]}" "$app"
 
 echo "Built $app"

@@ -7,6 +7,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let homeAccess = HomeAccess()
     private let store = SelectionStore()
     private let editorPreference = EditorPreference()
+    private let updater = Updater()
     private lazy var drawerShortcut = DrawerShortcut { [weak self] in self?.openDrawer() }
     private lazy var settings = SettingsWindowController(
         homeAccess: homeAccess,
@@ -30,6 +31,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusItem = item
 
         drawerShortcut.activate()
+        updater.start()
 
         if !homeAccess.restore() {
             settings.show()
@@ -78,6 +80,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             menu.addItem(NSMenuItem(title: "Set Up dotdrawer…", action: #selector(showSettings), keyEquivalent: ""))
         }
 
+        menu.addItem(makeUpdateMenuItem())
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Quit dotdrawer", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
 
@@ -147,6 +150,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let parent = NSMenuItem(title: "Set Default Editor", action: nil, keyEquivalent: "")
         parent.submenu = submenu
         return parent
+    }
+
+    /// "Check for Updates…", or the waiting version when a scheduled check
+    /// found one. Disabled while a check is already running.
+    private func makeUpdateMenuItem() -> NSMenuItem {
+        let title = updater.pendingVersion.map { "Update to Version \($0)…" } ?? "Check for Updates…"
+        let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+        if updater.canCheckForUpdates {
+            item.action = #selector(checkForUpdates)
+            item.target = self
+        }
+        return item
+    }
+
+    @objc private func checkForUpdates() {
+        updater.checkForUpdates()
     }
 
     @objc private func openFile(_ sender: NSMenuItem) {

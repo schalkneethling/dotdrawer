@@ -14,6 +14,7 @@ Click the menu bar icon, or press ⌃⌥⌘D from any app, to open a drawer list
 - **Open:** selecting a file opens it in the editor you chose with **Set Default Editor** in the menu, or under **Open files with** in Settings. Both list installed apps that edit text, and **Other…** lets you pick any app. If you keep the default, each file opens in the app macOS uses for its type, and files without an extension, such as `.zshrc`, open in your default plain-text editor.
 - **Shortcut:** ⌃⌥⌘D opens the drawer from any app, even when the menu bar icon is hidden. Change or clear it under **Open drawer with** in Settings. If another app claims the same shortcut exclusively, Settings says so and keeps your previous shortcut. macOS can't detect clashes with apps that don't claim their shortcut exclusively, so if the drawer doesn't open, try a different combination.
 - **Launch at login:** turn on **Launch dotdrawer at login** in Settings. If you later turn dotdrawer off under System Settings › General › Login Items, Settings shows a button that takes you there to approve it again.
+- **Updates:** dotdrawer checks for new versions with [Sparkle](https://sparkle-project.org). On the second launch, it asks whether to check automatically. You can also check any time with **Check for Updates…** in the menu. When a scheduled check finds a new version while you're working in another app, dotdrawer doesn't interrupt you with a window. Instead, the menu item changes to **Update to Version …** until you install or dismiss the update.
 
 ## Status
 
@@ -55,9 +56,9 @@ The logic that doesn't need a UI (the dotfile catalog and scanner, the editor li
 
 ## Releasing
 
-`./scripts/release.sh` builds the app, signs it with a Developer ID, has Apple notarize it, staples the notarization ticket to the app, and writes `build/release/dotdrawer-<version>.zip`. The version comes from `CFBundleShortVersionString` in `Resources/Info.plist`, so bump it, and `CFBundleVersion`, before each release.
+`./scripts/release.sh` builds the app, signs it with a Developer ID, has Apple notarize it, and staples the notarization ticket to the app. It writes two files to `build/release/<version>/`: `dotdrawer-<version>.zip`, and `appcast.xml`, the feed Sparkle reads to find and verify the update. The version comes from `Resources/Info.plist`, so bump both version keys before each release. Sparkle compares `CFBundleVersion` to decide whether a release is newer, so that number must go up every time, while `CFBundleShortVersionString` is the version people see.
 
-The script needs two things on the Mac that runs it, both set up once:
+The script needs three things on the Mac that runs it, all set up once:
 
 1. **A Developer ID Application certificate.** Only the Account Holder of an Apple Developer Program membership can create one. In Xcode, open Settings › Accounts, select the team, choose Manage Certificates, then click + and pick Developer ID Application. If the keychain holds more than one, set `DOTDRAWER_SIGN_IDENTITY` to the full name of the one to use.
 2. **Saved notarization credentials.** Create an app-specific password at [account.apple.com](https://account.apple.com) under Sign-In and Security, then store it in the keychain. `notarytool` prompts for the password:
@@ -67,11 +68,18 @@ The script needs two things on the Mac that runs it, both set up once:
    ```
 
    To use a different profile name, set `DOTDRAWER_NOTARY_PROFILE`.
+3. **Sparkle's private signing key.** Sparkle installs an update only when the zip is signed with the private key that matches `SUPublicEDKey` in `Resources/Info.plist`. The key lives in the login keychain under the account name `dotdrawer`. After `swift build` has downloaded Sparkle, you can export it to move it to another Mac or to keep a backup:
 
-Then create the release on GitHub with the zip attached:
+   ```bash
+   .build/artifacts/sparkle/Sparkle/bin/generate_keys --account dotdrawer -x dotdrawer-sparkle-key
+   ```
+
+   Keep that file somewhere safe and out of the repository. If the key is lost, installed copies can't verify updates any more, and their users have to download the next version by hand.
+
+Then create the release on GitHub with both files attached. Sparkle finds the feed through the latest release, so `appcast.xml` must be on every release:
 
 ```bash
-gh release create v<version> build/release/dotdrawer-<version>.zip --generate-notes
+gh release create v<version> build/release/<version>/dotdrawer-<version>.zip build/release/<version>/appcast.xml --generate-notes
 ```
 
 ## License
