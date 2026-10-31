@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Points the Homebrew cask at a release: sets the version and the zip's
-# checksum in Casks/dotdrawer.rb in the tap repository, then commits and
-# pushes. Run it after the release is published, because Homebrew downloads
+# Points the Homebrew cask at a release: sets the version, the zip's
+# checksum, and the minimum macOS in Casks/dotdrawer.rb in the tap
+# repository, then commits and pushes. Run it after the release is published, because Homebrew downloads
 # the zip from that release.
 #
 #   ./scripts/update-cask.sh <version>
@@ -28,6 +28,21 @@ if [[ ! -f "$zip" ]]; then
 fi
 sha256=$(shasum -a 256 "$zip" | cut -d ' ' -f 1)
 
+# The cask's macOS requirement must match the app in this zip, or Homebrew
+# would install it on Macs it can't run on. Homebrew names macOS versions,
+# so map the major version of LSMinimumSystemVersion to that name.
+min_macos=$(unzip -p "$zip" dotdrawer.app/Contents/Info.plist | plutil -extract LSMinimumSystemVersion raw -)
+case "${min_macos%%.*}" in
+    14) macos_name="sonoma" ;;
+    15) macos_name="sequoia" ;;
+    26) macos_name="tahoe" ;;
+    27) macos_name="golden_gate" ;;
+    *)
+        echo "No Homebrew name for macOS $min_macos yet. Add it to update-cask.sh." >&2
+        exit 1
+        ;;
+esac
+
 if [[ -n "${DOTDRAWER_TAP_URL:-}" ]]; then
     tap_url="$DOTDRAWER_TAP_URL"
 elif [[ -n "${HOMEBREW_TAP_TOKEN:-}" ]]; then
@@ -47,6 +62,7 @@ git clone --quiet "$tap_url" "$tap"
 sed -i '' -E \
     -e "s/^  version \".*\"$/  version \"$version\"/" \
     -e "s/^  sha256 \".*\"$/  sha256 \"$sha256\"/" \
+    -e "s/^  depends_on macos: .*$/  depends_on macos: :$macos_name/" \
     "$tap/Casks/dotdrawer.rb"
 
 # Running it twice for the same release changes nothing the second time.
