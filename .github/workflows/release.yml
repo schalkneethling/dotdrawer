@@ -97,20 +97,12 @@ jobs:
       - name: Update the Homebrew cask
         env:
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          GIT_AUTHOR_NAME: github-actions[bot]
+          GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
         if: env.HOMEBREW_TAP_TOKEN != ''
-        run: |
-          sha256=$(shasum -a 256 "build/release/$VERSION/dotdrawer-$VERSION.zip" | cut -d ' ' -f 1)
-          tap="$RUNNER_TEMP/homebrew-dotdrawer"
-          git clone "https://x-access-token:$HOMEBREW_TAP_TOKEN@github.com/schalkneethling/homebrew-dotdrawer.git" "$tap"
-          cd "$tap"
-          sed -i '' -E \
-            -e "s/^  version \".*\"$/  version \"$VERSION\"/" \
-            -e "s/^  sha256 \".*\"$/  sha256 \"$sha256\"/" \
-            Casks/dotdrawer.rb
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -am "Update dotdrawer to $VERSION"
-          git push
+        run: ./scripts/update-cask.sh "$VERSION"
 
       - name: Delete the keychain
         if: always() && env.KEYCHAIN != ''

@@ -82,6 +82,12 @@ Then create the release on GitHub with both files attached. Sparkle finds the fe
 gh release create v<version> build/release/<version>/dotdrawer-<version>.zip build/release/<version>/appcast.xml --generate-notes
 ```
 
+Finally, point the [Homebrew cask](https://github.com/schalkneethling/homebrew-dotdrawer) at the new release. The script sets the version and the zip's checksum in the tap repository, then commits and pushes, using your own GitHub access over SSH:
+
+```bash
+./scripts/update-cask.sh <version>
+```
+
 ### Releasing from GitHub Actions
 
 `.github/workflows/release.yml` does all of the above on GitHub when you push a version tag. It runs `release.sh` on GitHub's `xcode-27` runner, publishes the release with both files, and, when a token for the tap exists, updates the [Homebrew cask](https://github.com/schalkneethling/homebrew-dotdrawer). Bump the version in `Resources/Info.plist`, merge that change, then tag the commit on `main`:
