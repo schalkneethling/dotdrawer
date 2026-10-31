@@ -82,6 +82,34 @@ Then create the release on GitHub with both files attached. Sparkle finds the fe
 gh release create v<version> build/release/<version>/dotdrawer-<version>.zip build/release/<version>/appcast.xml --generate-notes
 ```
 
+### Releasing from GitHub Actions
+
+`.github/workflows/release.yml` does all of the above on GitHub when you push a version tag. It runs `release.sh` on GitHub's `xcode-27` runner, publishes the release with both files, and, when a token for the tap exists, updates the [Homebrew cask](https://github.com/schalkneethling/homebrew-dotdrawer). Bump the version in `Resources/Info.plist`, merge that change, then tag the commit on `main`:
+
+```bash
+git tag v<version>
+```
+
+```bash
+git push origin v<version>
+```
+
+The workflow stops if the tag doesn't match `CFBundleShortVersionString`. It needs these repository secrets, set once with `gh secret set` from the repository folder. Each command reads the value from a file or prompts for it, so the value never appears in your shell history.
+
+| Secret | What it holds | How to get it |
+|---|---|---|
+| `DEVELOPER_ID_CERTIFICATE_P12` | The Developer ID certificate and its private key, base64-encoded | In Keychain Access, select the "Developer ID Application" certificate, choose File › Export Items, and save it as a `.p12` file with a password. Then run `base64 -i developer-id.p12 \| gh secret set DEVELOPER_ID_CERTIFICATE_P12` |
+| `DEVELOPER_ID_CERTIFICATE_PASSWORD` | The password you gave the `.p12` file | `gh secret set DEVELOPER_ID_CERTIFICATE_PASSWORD`, then paste it at the prompt |
+| `NOTARY_API_KEY` | An App Store Connect API key, which `notarytool` uses instead of your Apple Account password | In App Store Connect, open Users and Access › Integrations › Team Keys, create a key with the Developer role, and download the `.p8` file. Then run `gh secret set NOTARY_API_KEY < AuthKey_<key ID>.p8` |
+| `NOTARY_API_KEY_ID` | The key's ID, shown next to it in App Store Connect | `gh secret set NOTARY_API_KEY_ID` |
+| `NOTARY_API_ISSUER_ID` | The issuer ID, shown above the list of keys | `gh secret set NOTARY_API_ISSUER_ID` |
+| `SPARKLE_PRIVATE_KEY` | Sparkle's private signing key | Export it as shown in step 3 above, then run `gh secret set SPARKLE_PRIVATE_KEY < dotdrawer-sparkle-key` |
+| `HOMEBREW_TAP_TOKEN` (optional) | A token that can push to the tap repository | Create a fine-grained personal access token limited to `schalkneethling/homebrew-dotdrawer`, with read and write access to Contents. Without it, the workflow skips the cask update |
+
+Delete the exported `.p12`, `.p8`, and Sparkle key files once the secrets are set, or keep them only in a password manager.
+
+`.github/workflows/ci.yml` builds and tests every pull request on the same runner, so a toolchain problem shows up there before a release depends on it.
+
 ## License
 
 [MIT](LICENSE)
