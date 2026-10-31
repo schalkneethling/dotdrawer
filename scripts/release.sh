@@ -47,6 +47,26 @@ fi
 
 ./scripts/build-app.sh
 
+# Sparkle installs an update only when it's signed with the private key that
+# matches SUPublicEDKey. On a mismatch, generate_appcast just prints a
+# warning and leaves the update unsigned, so compare the keys before
+# spending a notarization round on a release nobody could install.
+# Sparkle's tools can only print the public key of a keychain key, not of a
+# key file, so the release workflow relies on the signature check after
+# generate_appcast instead.
+sparkle_bin=".build/artifacts/sparkle/Sparkle/bin"
+if [[ -z "${DOTDRAWER_SPARKLE_KEY_FILE:-}" ]]; then
+    expected_key=$(/usr/libexec/PlistBuddy -c 'Print :SUPublicEDKey' Resources/Info.plist)
+    keychain_key=$("$sparkle_bin/generate_keys" --account dotdrawer -p 2>/dev/null || true)
+    if [[ "$keychain_key" != "$expected_key" ]]; then
+        echo "Sparkle's key in the keychain (account \"dotdrawer\") doesn't match SUPublicEDKey in Resources/Info.plist." >&2
+        echo "  keychain:   ${keychain_key:-none}" >&2
+        echo "  Info.plist: $expected_key" >&2
+        echo "README › Releasing explains how to import the key." >&2
+        exit 1
+    fi
+fi
+
 app="build/app.noindex/dotdrawer.app"
 version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Contents/Info.plist")
 # One folder per version, because generate_appcast adds an entry for every
@@ -85,10 +105,17 @@ ditto -c -k --keepParent "$app" "$zip"
 # The feed URL in Info.plist points at the latest release's appcast.xml, and
 # the download URL here points at this version's zip on the same release.
 repo="https://github.com/schalkneethling/dotdrawer"
-.build/artifacts/sparkle/Sparkle/bin/generate_appcast \
+"$sparkle_bin/generate_appcast" \
     "${sparkle_auth[@]}" \
     --download-url-prefix "$repo/releases/download/v$version/" \
     --full-release-notes-url "$repo/releases" \
     "$out"
+
+# generate_appcast exits successfully even when it couldn't sign the update,
+# so confirm the signature is there.
+if ! grep -q 'sparkle:edSignature=' "$out/appcast.xml"; then
+    echo "generate_appcast didn't sign the update in $out/appcast.xml. Don't publish this release." >&2
+    exit 1
+fi
 
 echo "Notarized $zip and wrote $out/appcast.xml"

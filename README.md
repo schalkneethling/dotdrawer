@@ -76,6 +76,18 @@ The script needs three things on the Mac that runs it, all set up once:
 
    Keep that file somewhere safe and out of the repository. If the key is lost, installed copies can't verify updates any more, and their users have to download the next version by hand.
 
+   On another Mac, import the exported file into the login keychain, then print the imported key's public half:
+
+   ```bash
+   .build/artifacts/sparkle/Sparkle/bin/generate_keys --account dotdrawer -f dotdrawer-sparkle-key
+   ```
+
+   ```bash
+   .build/artifacts/sparkle/Sparkle/bin/generate_keys --account dotdrawer -p
+   ```
+
+   The printed key must equal `SUPublicEDKey` in `Resources/Info.plist`. `release.sh` checks this before notarizing and stops if they differ, because Sparkle would otherwise publish an update that no installed copy accepts.
+
 Then create the release on GitHub with both files attached. Sparkle finds the feed through the latest release, so `appcast.xml` must be on every release:
 
 ```bash
