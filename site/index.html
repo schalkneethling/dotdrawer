@@ -38,14 +38,18 @@
           dotdrawer
         </a>
         <nav class="site-nav" aria-label="Main">
-          <a href="#how">how it works</a>
-          <a href="#install">install</a>
-          <a href="https://github.com/schalkneethling/dotdrawer">github ↗</a>
+          <ul class="nav-list">
+            <li><a href="#how">how it works</a></li>
+            <li><a href="#install">install</a></li>
+            <li>
+              <a href="https://github.com/schalkneethling/dotdrawer" rel="external">github ↗</a>
+            </li>
+          </ul>
         </nav>
       </header>
 
-      <main id="content">
-        <section class="hero" aria-labelledby="hero-title">
+      <main id="content" tabindex="-1">
+        <section class="hero">
           <h1 id="hero-title">
             Quick access to your <span class="highlight">dotfiles</span> and
             agent configs.
@@ -67,6 +71,7 @@
             <a
               class="button"
               href="https://github.com/schalkneethling/dotdrawer/releases/latest"
+              rel="external"
             >
               <svg
                 width="18"
@@ -165,6 +170,7 @@
           <a
             class="button"
             href="https://github.com/schalkneethling/dotdrawer/releases/latest"
+            rel="external"
           >
             <svg
               width="18"
@@ -209,7 +215,7 @@ brew install --cask dotdrawer</code></pre>
             <li>An Apple silicon or Intel Mac</li>
             <li>
               On macOS 14 or 15, use
-              <a href="https://github.com/schalkneethling/dotdrawer/releases/tag/v0.2.0">version 0.2.0</a>
+              <a href="https://github.com/schalkneethling/dotdrawer/releases/tag/v0.2.0" rel="external">version 0.2.0</a>
             </li>
           </ul>
         </section>
@@ -218,12 +224,20 @@ brew install --cask dotdrawer</code></pre>
       <footer class="site-footer">
         <p>
           MIT License · made by
-          <a href="https://schalkneethling.com">Schalk Neethling</a>
+          <a href="https://schalkneethling.com" rel="external">Schalk Neethling</a>
         </p>
         <nav aria-label="Project">
-          <a href="https://github.com/schalkneethling/dotdrawer">source</a>
-          <a href="https://github.com/schalkneethling/dotdrawer/releases">releases</a>
-          <a href="https://github.com/schalkneethling/dotdrawer/issues">issues</a>
+          <ul class="nav-list">
+            <li>
+              <a href="https://github.com/schalkneethling/dotdrawer" rel="external">source</a>
+            </li>
+            <li>
+              <a href="https://github.com/schalkneethling/dotdrawer/releases" rel="external">releases</a>
+            </li>
+            <li>
+              <a href="https://github.com/schalkneethling/dotdrawer/issues" rel="external">issues</a>
+            </li>
+          </ul>
         </nav>
       </footer>
     </div>
