@@ -74,7 +74,7 @@ The logic that doesn't need a UI (the dotfile catalog and scanner, the editor li
 
 ### Website
 
-The website at [dotdrawer.schalkneethling.com](https://dotdrawer.schalkneethling.com) lives in `site/`. It is plain HTML and CSS, plus a small script that adds a Copy button to the Homebrew commands, so there is no build step. To preview it, serve the folder and open http://localhost:4173:
+The website at [dotdrawer.schalkneethling.com](https://dotdrawer.schalkneethling.com) lives in `site/`. It is plain HTML and CSS, plus a small web component, `<copy-to-clipboard>`, that adds a Copy button to the Homebrew commands, so there is no build step. To preview it, serve the folder and open http://localhost:4173:
 
 ```bash
 python3 -m http.server 4173 --directory site

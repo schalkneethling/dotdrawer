@@ -26,7 +26,7 @@
       href="https://fonts.googleapis.com/css2?family=Geist:wght@400..600&amp;family=Geist+Mono:wght@400..600&amp;display=swap"
     />
     <link rel="stylesheet" href="styles.css" />
-    <script src="copy.js" defer></script>
+    <script type="module" src="copy-to-clipboard.js"></script>
   </head>
   <body>
     <a class="skip-link" href="#content">Skip to content</a>
@@ -186,14 +186,10 @@
 
           <div class="code-heading">
             <p class="prose" id="homebrew-label">Or, with Homebrew:</p>
-            <button
-              class="copy-button"
-              type="button"
-              data-copy-target="homebrew-commands"
-              hidden
-            >
-              Copy
-            </button>
+            <copy-to-clipboard for="homebrew-commands">
+              <button class="copy-button" type="button" hidden>Copy</button>
+              <span class="visually-hidden" role="status"></span>
+            </copy-to-clipboard>
           </div>
           <pre class="code-block" aria-labelledby="homebrew-label"><code id="homebrew-commands">brew tap schalkneethling/dotdrawer
 brew trust --cask schalkneethling/dotdrawer/dotdrawer
@@ -231,7 +227,5 @@ brew install --cask dotdrawer</code></pre>
         </nav>
       </footer>
     </div>
-
-    <p class="visually-hidden" role="status" id="copy-status"></p>
   </body>
 </html>
