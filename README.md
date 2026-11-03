@@ -80,6 +80,12 @@ The website at [dotdrawer.schalkneethling.com](https://dotdrawer.schalkneethling
 python3 -m http.server 4173 --directory site
 ```
 
+The preview image that social media shows for links to the site, `site/og-image.png`, is rendered from `scripts/og-image.html`, which reuses the site's stylesheet. After changing either, render it again with headless Google Chrome:
+
+```bash
+./scripts/build-og-image.sh
+```
+
 Netlify publishes `site/` as it is, following `netlify.toml`. That file also sets the site's security headers, and skips the deploy when a commit changes nothing in `site/` or in `netlify.toml` itself, which is true of most app commits.
 
 ## Releasing

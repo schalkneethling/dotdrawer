@@ -1,0 +1,92 @@
+<!doctype html>
+<!--
+  The source of site/og-image.png, the preview image that links to the site
+  show on social media. build-og-image.sh renders this page at 1200×630.
+  It stays out of site/ so Netlify doesn't publish it.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>dotdrawer Open Graph image</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400..600&amp;display=swap"
+    />
+    <link rel="stylesheet" href="../site/styles.css" />
+    <style>
+      /* X crops large card images to 2:1, which trims up to 15px from the top
+         and bottom of this 1200×630 image, so nothing sits near those edges. */
+      .og {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        inline-size: 1200px;
+        block-size: 630px;
+        padding: 72px 80px;
+        font-family: var(--font-mono);
+      }
+
+      .og-wordmark {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        font-size: 32px;
+        font-weight: 600;
+      }
+
+      .og h1 {
+        margin: 0;
+        font-size: 58px;
+        font-weight: 500;
+        line-height: 1.15;
+        letter-spacing: -0.03em;
+      }
+
+      .og-footer {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+      }
+
+      .og .keys {
+        gap: 12px;
+        margin-block-start: 0;
+      }
+
+      .og .key {
+        inline-size: 84px;
+        block-size: 84px;
+        font-size: 36px;
+        animation: none;
+      }
+
+      .og-url {
+        color: var(--color-ink-subtle);
+        font-size: 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="og">
+      <div class="og-wordmark">
+        <img src="../site/mark.svg" alt="" width="48" height="48" />
+        dotdrawer
+      </div>
+      <h1>
+        Quick access to your <span class="highlight">dotfiles</span><br />
+        and agent configs.
+      </h1>
+      <div class="og-footer">
+        <div class="keys">
+          <kbd class="key">⌃</kbd>
+          <kbd class="key">⌥</kbd>
+          <kbd class="key">⌘</kbd>
+          <kbd class="key key-accent">D</kbd>
+        </div>
+        <p class="og-url">dotdrawer.schalkneethling.com</p>
+      </div>
+    </div>
+  </body>
+</html>
