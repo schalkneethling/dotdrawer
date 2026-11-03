@@ -166,13 +166,20 @@ pre {
   flex-wrap: wrap;
 }
 
+/*
+ * The key's depth is a solid shadow rather than a thick bottom border, so a
+ * press can move the key down onto its shadow with a transform and change
+ * nothing in the layout around it.
+ */
 .key {
+  --key-depth: 6px;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border: 2px solid var(--color-ink);
-  border-block-end-width: 8px;
   border-radius: 1rem;
+  box-shadow: 0 var(--key-depth) 0 var(--color-ink);
   background: var(--color-surface);
   color: var(--color-ink);
   line-height: 1;
@@ -181,6 +188,55 @@ pre {
 .key-accent {
   background: var(--color-highlight);
   font-weight: 600;
+}
+
+/*
+ * Two seconds after the page loads, the keys go down one after another, the
+ * way fingers press the shortcut, then all four come back up together.
+ * key-press holds the pressed position (`forwards`) until key-release, which
+ * comes later in the list and so wins once it starts, lifts the key back up.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .key {
+    animation:
+      key-press 90ms ease-out var(--key-press-delay) forwards,
+      key-release 180ms ease-in 2.8s forwards;
+  }
+
+  .key:nth-child(1) {
+    --key-press-delay: 2s;
+  }
+
+  .key:nth-child(2) {
+    --key-press-delay: 2.12s;
+  }
+
+  .key:nth-child(3) {
+    --key-press-delay: 2.24s;
+  }
+
+  .key:nth-child(4) {
+    --key-press-delay: 2.36s;
+  }
+}
+
+@keyframes key-press {
+  to {
+    box-shadow: 0 0 0 var(--color-ink);
+    transform: translateY(var(--key-depth));
+  }
+}
+
+@keyframes key-release {
+  from {
+    box-shadow: 0 0 0 var(--color-ink);
+    transform: translateY(var(--key-depth));
+  }
+
+  to {
+    box-shadow: 0 var(--key-depth) 0 var(--color-ink);
+    transform: none;
+  }
 }
 
 .keys-caption {
