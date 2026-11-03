@@ -8,5 +8,9 @@ DerivedData/
 .netrc
 /build
 
+# Tells the Claude desktop app how to serve site/ for previews. People use
+# the command in the README's Website section instead.
+/.claude/launch.json
+
 # Exported Sparkle signing key (see README › Releasing). Never commit it.
 /dotdrawer-sparkle-key
