@@ -72,6 +72,22 @@ The app icon is `Resources/AppIcon.icon`. Open it in Icon Composer (Xcode › Op
 
 The logic that doesn't need a UI (the dotfile catalog and scanner, the editor list filter, the shortcut model, and the saved settings) lives in the `DotdrawerCore` library, which the tests cover. The menu bar app is the `dotdrawer` executable.
 
+### Website
+
+The website at [dotdrawer.schalkneethling.com](https://dotdrawer.schalkneethling.com) lives in `site/`. It is plain HTML and CSS, plus a small web component, `<copy-to-clipboard>`, that adds a Copy button to the Homebrew commands, so there is no build step. To preview it, serve the folder and open http://localhost:4173:
+
+```bash
+python3 -m http.server 4173 --directory site
+```
+
+The preview image that social media shows for links to the site, `site/og-image.png`, is rendered from `scripts/og-image.html`, which reuses the site's stylesheet. After changing either, render it again with headless Google Chrome:
+
+```bash
+./scripts/build-og-image.sh
+```
+
+Netlify publishes `site/` as it is, following `netlify.toml`. That file also sets the site's security headers, and skips the deploy when a commit changes nothing in `site/` or in `netlify.toml` itself, which is true of most app commits.
+
 ## Releasing
 
 `./scripts/release.sh` builds the app, signs it with a Developer ID, has Apple notarize it, and staples the notarization ticket to the app. It writes two files to `build/release/<version>/`: `dotdrawer-<version>.zip`, and `appcast.xml`, the feed Sparkle reads to find and verify the update. The version comes from `Resources/Info.plist`, so bump both version keys before each release. Sparkle compares `CFBundleVersion` to decide whether a release is newer, so that number must go up every time, while `CFBundleShortVersionString` is the version people see.

@@ -1,0 +1,17 @@
+# The website at dotdrawer.schalkneethling.com. It is plain HTML, CSS and a
+# little JavaScript in site/, so Netlify publishes that folder as it is,
+# with no build command.
+[build]
+  publish = "site"
+  # Most commits only touch the app. `git diff --quiet` exits 0 when nothing
+  # under these paths changed, which tells Netlify to skip the deploy.
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF site netlify.toml"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # The page loads its own files plus the Geist fonts from Google Fonts,
+    # and nothing else.
+    Content-Security-Policy = "default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self'; script-src 'self'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Content-Type-Options = "nosniff"
