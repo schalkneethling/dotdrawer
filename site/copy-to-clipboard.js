@@ -61,4 +61,8 @@ export class CopyToClipboard extends HTMLElement {
   }
 }
 
-customElements.define("copy-to-clipboard", CopyToClipboard);
+// Defining the same name twice throws, so a second copy of this module on the
+// page leaves the first registration in place.
+if (!customElements.get("copy-to-clipboard")) {
+  customElements.define("copy-to-clipboard", CopyToClipboard);
+}
