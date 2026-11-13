@@ -1,0 +1,63 @@
+# CodeQL code scanning, set up by hand instead of through GitHub's default
+# setup. Default setup builds Swift on GitHub's standard macOS runner, whose
+# Swift is older than the 6.4 that Package.swift needs, so the Swift scan
+# fails there. This workflow builds Swift on the same xcode-27 runner as CI.
+#
+# GitHub rejects results from this workflow while default setup is turned
+# on, so .github/repository-controls.json records default setup as
+# not-configured. The default-branch ruleset still requires CodeQL results,
+# which this workflow provides.
+name: CodeQL
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  # Weekly, so new queries also run against code that hasn't changed.
+  schedule:
+    - cron: "17 4 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: actions
+            build-mode: none
+            runner: ubuntu-latest
+          - language: javascript-typescript
+            build-mode: none
+            runner: ubuntu-latest
+          # The package needs Swift 6.4, which first shipped with Xcode 27.
+          - language: swift
+            build-mode: manual
+            runner: xcode-27
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          # The same extended suite that the default setup policy asked for.
+          queries: security-extended
+
+      - name: Build
+        if: matrix.build-mode == 'manual'
+        run: swift build
+
+      - uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          # The categories default setup used, so existing alerts carry over.
+          category: /language:${{ matrix.language }}
