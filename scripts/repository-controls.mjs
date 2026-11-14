@@ -2,7 +2,7 @@
 /* eslint-disable no-console */
 
 import { execFileSync } from "node:child_process";
-import { lstatSync, readFileSync } from "node:fs";
+import { closeSync, constants, fstatSync, openSync, readFileSync } from "node:fs";
 import { createInterface } from "node:readline/promises";
 import { isDeepStrictEqual } from "node:util";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -32,10 +32,26 @@ const root = fileURLToPath(new URL("..", import.meta.url));
 const configPath = fileURLToPath(new URL("../.github/repository-controls.json", import.meta.url));
 
 export function readBoundedJson(path, limit = CONFIG_LIMIT) {
-  const before = lstatSync(path);
-  if (!before.isFile()) throw new Error(`${path} must be a regular file.`);
-  if (before.size > limit) throw new Error(`${path} exceeds the ${limit}-byte safety limit.`);
-  const contents = readFileSync(path);
+  // Open the path once and check and read that open file, so the path can't be swapped for a
+  // symlink or another file between the check and the read. O_NOFOLLOW refuses a symlink.
+  let fd;
+  try {
+    fd = openSync(path, constants.O_RDONLY | constants.O_NOFOLLOW);
+  } catch (error) {
+    if (error?.code === "ELOOP") {
+      throw new Error(`${path} must be a regular file.`, { cause: error });
+    }
+    throw error;
+  }
+  let contents;
+  try {
+    const before = fstatSync(fd);
+    if (!before.isFile()) throw new Error(`${path} must be a regular file.`);
+    if (before.size > limit) throw new Error(`${path} exceeds the ${limit}-byte safety limit.`);
+    contents = readFileSync(fd);
+  } finally {
+    closeSync(fd);
+  }
   if (contents.byteLength > limit) {
     throw new Error(`${path} exceeded the ${limit}-byte safety limit while being read.`);
   }
