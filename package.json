@@ -1,0 +1,15 @@
+{
+  "name": "dotdrawer",
+  "private": true,
+  "description": "A macOS menu bar app for dotfiles and global agent configs. This file only holds the scripts that manage the repository's GitHub controls; the app itself is a Swift package.",
+  "license": "MIT",
+  "scripts": {
+    "repo:controls:check": "node scripts/repository-controls.mjs",
+    "repo:controls:apply": "node scripts/repository-controls.mjs --apply"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/schalkneethling/dotdrawer.git"
+  },
+  "homepage": "https://github.com/schalkneethling/dotdrawer#readme"
+}

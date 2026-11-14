@@ -1,0 +1,62 @@
+# CodeQL code scanning, set up by hand instead of through GitHub's default
+# setup, so that Swift can be added here once CodeQL supports it.
+#
+# Swift is not scanned yet. CodeQL analyses Swift only by tracing a build,
+# and CodeQL Action v4.39.3 does not support tracing on macOS 27 or Xcode 27
+# (see src/languages/traced.ts in github/codeql-action). The package needs
+# Swift 6.4, which first shipped with Xcode 27, and the older Swift on
+# macOS 26 runners cannot build it. To add Swift once CodeQL supports
+# macOS 27, add a matrix entry with language: swift, build-mode: manual and
+# runner: xcode-27, and a `swift build` step between init and analyze.
+#
+# GitHub rejects results from this workflow while default setup is turned
+# on, so .github/repository-controls.json records default setup as
+# not-configured. The default-branch ruleset still requires CodeQL results,
+# which this workflow provides.
+name: CodeQL
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  # Weekly, so new queries also run against code that hasn't changed.
+  schedule:
+    - cron: "17 4 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: actions
+            build-mode: none
+            runner: ubuntu-latest
+          - language: javascript-typescript
+            build-mode: none
+            runner: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          # The extended suite, which Calavera's generated policy uses for
+          # default setup.
+          queries: security-extended
+
+      - uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          # The categories default setup used, so existing alerts carry over.
+          category: /language:${{ matrix.language }}
