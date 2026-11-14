@@ -13,7 +13,7 @@ let package = Package(
     dependencies: [
         // In-app updates. Pinned to an exact release, because it ships inside
         // the app and verifies every update it installs.
-        .package(url: "https://github.com/sparkle-project/Sparkle", exact: "2.10.0"),
+        .package(url: "https://github.com/sparkle-project/Sparkle", exact: "2.10.1"),
     ],
     targets: [
         // UI-free logic: which dotfiles exist and which ones the user chose.
