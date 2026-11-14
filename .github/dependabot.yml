@@ -1,0 +1,20 @@
+version: 2
+updates:
+  # Sparkle, from Package.swift and Package.resolved. Calavera's recipe does
+  # not offer the swift ecosystem yet, so this entry is added by hand.
+  - package-ecosystem: swift
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+      include:
+        - "*"
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+      include:
+        - "*"
