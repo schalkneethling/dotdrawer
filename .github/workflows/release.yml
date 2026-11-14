@@ -26,6 +26,11 @@ jobs:
     runs-on: xcode-27
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        # No later step uses git with this job's token: gh reads GH_TOKEN, and
+        # update-cask.sh clones the tap with its own token. So don't leave it
+        # in .git/config.
+        with:
+          persist-credentials: false
 
       # A tag that disagrees with Info.plist would publish a zip and an
       # appcast entry under the wrong version.
